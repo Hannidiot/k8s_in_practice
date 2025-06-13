@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  hello-world:
+    build: .
+    image: hello-world-service:latest
+    container_name: hello-world-service
+    ports:
+      - "5001-5005:5000"
+    environment:
+      - PORT=5000
+      - FLASK_ENV=production
+    restart: unless-stopped
