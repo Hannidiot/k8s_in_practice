@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: simple-batch-job
+  labels:
+    app: batch-processor
+    type: data-processing
+spec:
+  # Job will be considered failed if it takes longer than 5 minutes
+  activeDeadlineSeconds: 300
+  
+  # Number of retries before marking job as failed
+  backoffLimit: 3
+  
+  # Automatically clean up completed jobs after 1 hour
+  ttlSecondsAfterFinished: 600
+  
+  template:
+    metadata:
+      labels:
+        app: batch-processor
+        type: data-processing
+    spec:
+      restartPolicy: Never
+      
+      containers:
+      - name: batch-processor
+        image: simple-batch-job:v1
+        imagePullPolicy: IfNotPresent
+        
+        env:
+        - name: JOB_NAME
+          value: "simple-batch-job-$(date +%s)"
+        - name: BATCH_SIZE
+          value: "100"
+        - name: PROCESSING_TIME
+          value: "60"
+        - name: FAILURE_RATE
+          value: "0"
+        
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        # Uncomment to add volume mounts for data processing
+        # volumeMounts:
+        # - name: data-volume
+        #   mountPath: /data
+      
+      # Uncomment to add volumes for data processing
+      # volumes:
+      # - name: data-volume
+      #   persistentVolumeClaim:
+      #     claimName: batch-data-pvc
