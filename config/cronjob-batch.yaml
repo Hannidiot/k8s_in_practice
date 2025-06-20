@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scheduled-batch-job
+  labels:
+    app: batch-processor
+    type: scheduled-data-processing
+spec:
+  # Run every 30 minutes
+  schedule: "*/30 * * * *"
+  
+  # Keep last 3 successful jobs and 1 failed job for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  # Don't start new job if previous one is still running
+  concurrencyPolicy: Forbid
+  
+  jobTemplate:
+    metadata:
+      labels:
+        app: batch-processor
+        type: scheduled-data-processing
+    spec:
+      # Job will be considered failed if it takes longer than 5 minutes
+      activeDeadlineSeconds: 300
+      
+      # Number of retries before marking job as failed
+      backoffLimit: 3
+      
+      # Automatically clean up completed jobs after 10 minutes
+      ttlSecondsAfterFinished: 600
+      
+      template:
+        metadata:
+          labels:
+            app: batch-processor
+            type: scheduled-data-processing
+        spec:
+          restartPolicy: Never
+          
+          containers:
+          - name: batch-processor
+            image: simple-batch-job:v1
+            imagePullPolicy: IfNotPresent
+            
+            env:
+            - name: JOB_NAME
+              value: "scheduled-batch-job-$(date +%s)"
+            - name: BATCH_SIZE
+              value: "100"
+            - name: PROCESSING_TIME
+              value: "60"
+            - name: FAILURE_RATE
+              value: "0"
+            
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+            
+            # Uncomment to add volume mounts for data processing
+            # volumeMounts:
+            # - name: data-volume
+            #   mountPath: /data
+          
+          # Uncomment to add volumes for data processing
+          # volumes:
+          # - name: data-volume
+          #   persistentVolumeClaim:
+          #     claimName: batch-data-pvc

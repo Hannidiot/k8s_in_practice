@@ -12,7 +12,7 @@ spec:
   # Number of retries before marking job as failed
   backoffLimit: 3
   
-  # Automatically clean up completed jobs after 1 hour
+  # Automatically clean up completed jobs after 10 minutes
   ttlSecondsAfterFinished: 600
   
   template:
